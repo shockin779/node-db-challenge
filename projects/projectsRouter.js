@@ -34,11 +34,23 @@ router.get('/:id', (req, res) => {
     const {id} = req.params;
     Projects.getProjectById(id)
         .then(project => {
-            let [foundProject] = project;
-            if(!foundProject) {
+            let [projectDetails] = project;
+            if(!projectDetails) {
                 res.status(404).json({message: 'Invalid project'});
             } else {
-                res.status(200).json(foundProject);
+                projectDetails.completed = projectDetails.completed ? true : false;
+                //Make a call for the tasks of the project
+                Projects.getTasksForProject(projectDetails.id)
+                    .then(tasksForProject => {
+                        projectDetails.tasks = tasksForProject;
+                        Projects.getResourceForProject(projectDetails.id)
+                            .then(resourcesForProject => {
+                                projectDetails.resources = resourcesForProject;
+                                res.status(200).json(projectDetails);
+                            })
+                            .catch(err => res.status(500).json({message: `There was an error fetching the resources for the project: ${err}`}))
+                    })
+                    .catch(err => res.status(500).json({message: `There was an error fetching the tasks for the project: ${err}`}))
             }
         })
 })

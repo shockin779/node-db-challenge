@@ -9,7 +9,9 @@ module.exports = {
     getTaskById,
     addProject,
     addTask,
-    addResource
+    addResource,
+    getTasksForProject,
+    getResourceForProject
 };
 
 function getResources() {
@@ -53,4 +55,16 @@ async function addResource(newResource) {
     const [id] = await db('resources').insert(newResource);
 
     return getResourceById(id);
+}
+
+function getTasksForProject(projectId) {
+    return db('tasks').where({project_id: projectId})
+        .select('id', 'description', 'notes', 'completed');
+}
+
+function getResourceForProject(projectId) {
+    return db('projects_resources AS pr')
+        .join('resources AS r', 'pr.resource_id', '=', 'r.id')
+        .where({project_id: projectId})
+        .select('r.id', 'r.name', 'r.description')
 }
